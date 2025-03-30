@@ -1,12 +1,110 @@
 # Bridge Padrão: Separando Abstração da Implementação
 
+## Intenção do Padrão
+O padrão **Bridge** tem como objetivo desacoplar uma abstração de sua implementação, permitindo que ambos evoluam independentemente. Isso facilita a manutenção, reutilização de código e aumenta a flexibilidade do sistema.
+
 ## Motivação
-O padrão de projeto **Bridge** permite separar uma abstração de sua implementação, possibilitando que ambas evoluam independentemente. Isso promove um código mais flexível e com baixo acoplamento.
+Em muitos casos, sistemas precisam oferecer múltiplas variações de um mesmo conceito. Por exemplo, em um sistema de notificações, podemos ter diferentes tipos de mensagens (simples, urgentes) e diferentes meios de envio (e-mail, SMS). Se essas variações forem implementadas diretamente em subclasses, o código pode se tornar rígido e difícil de expandir. O padrão **Bridge** resolve esse problema separando a abstração da implementação, permitindo combinações flexíveis.
 
-Neste exemplo, utilizamos o **Bridge** para enviar notificações por diferentes meios, como **E-mail** e **SMS**, mantendo a separação entre o tipo de mensagem e a forma de envio.
+## Código Antes da Aplicação do Bridge
 
-## UML do Bridge
+```java
+package semBridge;
 
+class NotificacaoEmailSimples {
+    public void enviar(String mensagem) {
+        System.out.println("Enviando E-mail: " + mensagem);
+    }
+}
+
+class NotificacaoEmailUrgente {
+    public void enviar(String mensagem) {
+        System.out.println("*** URGENTE *** Enviando E-mail: " + mensagem);
+    }
+}
+
+class NotificacaoSmsSimples {
+    public void enviar(String mensagem) {
+        System.out.println("Enviando SMS: " + mensagem);
+    }
+}
+
+class NotificacaoSmsUrgente {
+    public void enviar(String mensagem) {
+        System.out.println("*** URGENTE *** Enviando SMS: " + mensagem);
+    }
+}
+
+public class Main {
+    public static void main(String[] args) {
+        NotificacaoEmailSimples emailSimples = new NotificacaoEmailSimples();
+        emailSimples.enviar("Olá, este é um teste de e-mail.");
+
+        NotificacaoSmsUrgente smsUrgente = new NotificacaoSmsUrgente();
+        smsUrgente.enviar("Este é um alerta crítico!");
+    }
+}
+```
+
+### Problemas desse código:
+- **Alto acoplamento**: cada tipo de notificação está diretamente ligado ao meio de envio.
+- **Duplicação de código**: se quisermos adicionar um novo meio de envio (exemplo: WhatsApp), precisaríamos criar mais classes.
+- **Dificuldade de manutenção**: qualquer alteração no envio de mensagens precisa ser replicada em várias classes.
+
+## UML do Cenário (Antes da Aplicação do Padrão)
+```mermaid
+classDiagram
+    class Notificacao {
+        +tipo: String
+        +meioEnvio: String
+        +enviar(String mensagem)
+    }
+    class NotificacaoEmail {
+        +enviar(String mensagem)
+    }
+    class NotificacaoSms {
+        +enviar(String mensagem)
+    }
+    class NotificacaoSimples {
+        +enviar(String mensagem)
+    }
+    class NotificacaoUrgente {
+        +enviar(String mensagem)
+    }
+    Notificacao <|-- NotificacaoEmail
+    Notificacao <|-- NotificacaoSms
+    NotificacaoEmail <|-- NotificacaoSimples
+    NotificacaoEmail <|-- NotificacaoUrgente
+    NotificacaoSms <|-- NotificacaoSimples
+    NotificacaoSms <|-- NotificacaoUrgente
+```
+
+## UML da Estrutura do Padrão (GoF)
+```mermaid
+classDiagram
+    class Abstraction {
+        +implementor: Implementor
+        +operation()
+    }
+    class RefinedAbstraction {
+        +operation()
+    }
+    class Implementor {
+        +operationImpl()
+    }
+    class ConcreteImplementorA {
+        +operationImpl()
+    }
+    class ConcreteImplementorB {
+        +operationImpl()
+    }
+    Abstraction <|-- RefinedAbstraction
+    Abstraction --> Implementor
+    Implementor <|-- ConcreteImplementorA
+    Implementor <|-- ConcreteImplementorB
+```
+
+## UML Após a Refatoração Aplicando o Padrão Bridge
 ```mermaid
 classDiagram
     class MensagemImplementacao {
@@ -28,7 +126,6 @@ classDiagram
     class MensagemUrgente {
         +enviar(String mensagem)
     }
-    
     MensagemImplementacao <|-- EmailMensagem
     MensagemImplementacao <|-- SmsMensagem
     Mensagem <|-- MensagemSimples
@@ -36,7 +133,7 @@ classDiagram
     Mensagem --> MensagemImplementacao
 ```
 
-## Código do Bridge
+## Código Após a Refatoração
 
 ### Implementação - Interface para diferentes formas de envio de mensagem
 ```java
@@ -48,7 +145,6 @@ public interface MensagemImplementacao {
 ```
 
 ### Implementações concretas
-
 #### EmailMensagem
 ```java
 package bridge;
@@ -74,7 +170,6 @@ public class SmsMensagem implements MensagemImplementacao {
 ```
 
 ### Abstração - Interface para tipos de mensagens
-
 #### Mensagem
 ```java
 package bridge;
@@ -91,7 +186,6 @@ public abstract class Mensagem {
 ```
 
 ### Abstrações refinadas
-
 #### MensagemSimples
 ```java
 package bridge;
@@ -138,8 +232,6 @@ public class Main {
     }
 }
 ```
-
-
 ## Explicação do Código
 1. **Criamos a interface `MensagemImplementacao`**, que representa diferentes formas de envio de mensagem.
 2. **Implementamos `EmailMensagem` e `SmsMensagem`**, que enviam mensagens por e-mail e SMS.
@@ -164,4 +256,3 @@ public class Main {
 
 - **Cliente (`Main`)**
   - Usa as abstrações e implementações de maneira independente, garantindo flexibilidade e escalabilidade.
-
